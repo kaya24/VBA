@@ -1,0 +1,33 @@
+<使い方メモ>
+
+	<Input ファイル>
+	検証まとめシート作成マクロ.xlsm
+	結合試験項目書.xlsx
+    summary.xlsx
+    
+	<output ファイル>
+	summary.xlsx
+
+
+[手順]
+	1.
+	検証まとめシート作成マクロ.xlsmに、
+	検証項目名（結合試験項目書.xlsx）を記入する。
+	このファイルは、マクロファイルと同一ディレクトリに置くこと。
+	
+	2.
+	作成シート名を記入する。
+	項目シートにある、検証項目シート分用意する。
+	
+	3.
+	結合試験項目書.xlsxと、summary.xlsxを開いたままにする。
+	
+	4.
+	ボタン押す。
+
+
+
+[実行マクロコード]
+
+Option ExplicitOption Base 1'  変数定義Dim wbookName  As String, sbookName As StringDim itemName() As String' Book and Sheet NameDim mbook As Workbook, wbook As Workbook, sbook As WorkbookDim wsheet As Worksheet, ssheet As Worksheet' CounterDim i As Integer, n As IntegerSub GenCheckSheet()'' GenCheckSheet Macro'' *****************************************'  マクロシートの情報取得処理'  : wbookPath, itemName(i)' *****************************************'  検証項目シート名を取得するwbookName = ThisWorkbook.Worksheets("exe").Range("B1").Value'  検証まとめシート名を取得するsbookName = ThisWorkbook.Worksheets("exe").Range("E3").Value Debug.Print wbookName ' Count item sizeThisWorkbook.Worksheets("exe").Range("B2").CurrentRegion.SelectReDim itemName(Selection.Rows.Count - 1)n = Selection.Rows.Count - 1For i = 1 To n  itemName(i) = Cells(1 + i, 2).Value  Debug.Print itemName(i)Next i' *****************************************'  summary  ブック作成' *****************************************' summaryブックをアクティブにする Workbooks(sbookName).Activate  Dim categoryName As String For i = 1 To n  categoryName = itemName(i) 'シート削除の確認ダイアログを出さないようにする Application.DisplayAlerts = False '  同じ名前のシートは一度削除する If SheetDetect(categoryName) Then    Worksheets(categoryName).Delete End If '  新規シート作成 If SheetDetect(categoryName) = False Then  Worksheets.Add after:=Worksheets(Worksheets.Count)  ActiveSheet.Name = categoryName End If Call InitText(i)Next iEnd Sub  '  各シートごとに検証まとめフォーマットを作成するSub InitText(ref_num As Integer)   Range("A1") = "[" + ActiveSheet.Name + "]"   Range("A3") = "【検証内容】"     '  結合試験項目書.xlsx の文字を取得する   Set wbook = Workbooks(wbookName)   Dim str1 As String, str2 As String  ' 結合試験項目書のシートn番目における' 前提条件と確認内容を取得する With wbook.Worksheets(3)   'str1 = .Range("D7").Value   str1 = .Cells(7 + ref_num - 1, 4).Value   'str2 = .Range("E7").Value   str2 = .Cells(7 + ref_num - 1, 5).Value  End With    Debug.Print str1  Debug.Print str2    '  summary.xlsxのitemName(i)シートにペーストする   Set sbook = Workbooks(sbookName)   Set ssheet = sbook.Worksheets(itemName(ref_num))     With ssheet   .Select   .Range("B4") = "<前提条件>"   .Range("B5") = str1   .Range("B7") = "<確認内容>"   .Range("B8") = str2   .Range("B10") = "<確認結果>"   .Range("B11") = "OK"  End With  End Sub' シート名を検索する' http://xl.hisholy.net/excelvba/sheetdetect/Public Function SheetDetect(SName As String) As Boolean    Dim sht As Worksheet    For Each sht In Worksheets        If sht.Name = SName Then            SheetDetect = True            Exit Function        End If    NextEnd Function   
+	
